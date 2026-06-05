@@ -1,0 +1,6 @@
+dataset/
+artifacts/
+*.csv
+*.pkl
+logs/
+__pycache__/
