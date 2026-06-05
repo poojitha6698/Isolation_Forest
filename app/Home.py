@@ -2,38 +2,38 @@ import streamlit as st
 import pandas as pd
 
 st.set_page_config(
-    page_title="Isolation Forest Fraud Detection",
+    page_title="Isolation Forest",
     page_icon="🚨",
     layout="wide"
 )
 
-st.title("🚨 Isolation Forest Fraud Detection")
-
-st.sidebar.header("Dataset Upload")
+st.title("🚨 Isolation Forest Anomaly Detection")
 
 uploaded_file = st.sidebar.file_uploader(
-    "Upload Credit Card Dataset",
+    "Upload Dataset",
     type=["csv"]
 )
 
 if uploaded_file is not None:
 
-    df = pd.read_csv(uploaded_file)
+    df = pd.read_csv(
+        uploaded_file
+    )
 
     st.session_state["df"] = df
 
     st.sidebar.success(
-        f"Dataset Loaded Successfully ({df.shape[0]} rows)"
+        f"Dataset Loaded ({df.shape[0]} rows)"
     )
 
 st.markdown("""
-### Project Overview
+### Features
 
-This project performs:
+✔ Upload Any CSV Dataset
 
-- Exploratory Data Analysis
-- Anomaly Detection using Isolation Forest
-- Fraud Exploration Dashboard
+✔ EDA Dashboard
 
-Upload your dataset from the sidebar to begin.
+✔ Isolation Forest Detection
+
+✔ Download Results
 """)

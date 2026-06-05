@@ -1,21 +1,24 @@
 import streamlit as st
 
-st.title("Isolation Forest Model")
+st.title("Model Information")
 
 st.markdown("""
-### Algorithm
+### Isolation Forest
 
-Isolation Forest
+Isolation Forest is an unsupervised anomaly detection algorithm.
 
-### Advantages
+### Features
 
-- Fast
-- Scalable
 - Works without labels
-- Effective for anomaly detection
+- Detects outliers
+- Handles high-dimensional data
+- Fast and scalable
 
-### Hyperparameters
+### Workflow
 
-- n_estimators = 200
-- contamination = 0.0017
+1. Upload Dataset
+2. EDA Analysis
+3. Data Scaling
+4. Isolation Forest Training
+5. Anomaly Detection
 """)

@@ -1,6 +1,10 @@
-dataset/
 artifacts/
+dataset/
+
 *.csv
 *.pkl
+
 logs/
+
 __pycache__/
+*.pyc

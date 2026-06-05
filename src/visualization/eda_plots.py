@@ -9,61 +9,16 @@ sns.set_style("whitegrid")
 class EDAPlots:
 
     @staticmethod
-    def fraud_distribution(df):
-
-        fig = px.pie(
-            df,
-            names="Class",
-            title="Fraud vs Non-Fraud Distribution"
-        )
-
-        return fig
-
-    @staticmethod
-    def amount_distribution(df):
-
-        fig = px.histogram(
-            df,
-            x="Amount",
-            nbins=100,
-            title="Transaction Amount Distribution"
-        )
-
-        return fig
-
-    @staticmethod
-    def amount_by_class(df):
-
-        fig = px.box(
-            df,
-            x="Class",
-            y="Amount",
-            title="Amount Distribution by Class"
-        )
-
-        return fig
-
-    @staticmethod
-    def time_distribution(df):
-
-        fig = px.histogram(
-            df,
-            x="Time",
-            nbins=100,
-            title="Transaction Time Distribution"
-        )
-
-        return fig
-
-    @staticmethod
     def correlation_heatmap(df):
 
         fig, ax = plt.subplots(
-            figsize=(15, 10)
+            figsize=(12, 8)
         )
 
         sns.heatmap(
-            df.corr(),
+            df.corr(
+                numeric_only=True
+            ),
             cmap="coolwarm",
             ax=ax
         )
@@ -75,51 +30,76 @@ class EDAPlots:
         return fig
 
     @staticmethod
-    def top_correlated_features(df):
-
-        corr = df.corr()["Class"]
-
-        corr = corr.drop(
-            "Class"
-        )
-
-        corr = corr.abs()
-
-        corr = corr.sort_values(
-            ascending=False
-        )
-
-        top_corr = corr.head(10)
-
-        fig = px.bar(
-            x=top_corr.index,
-            y=top_corr.values,
-            title="Top Features Correlated with Fraud"
-        )
-
-        return fig
-
-    @staticmethod
-    def feature_histogram(df, feature):
+    def feature_histogram(
+        df,
+        feature
+    ):
 
         fig = px.histogram(
             df,
             x=feature,
-            color="Class",
-            barmode="overlay",
+            nbins=50,
             title=f"{feature} Distribution"
         )
 
         return fig
 
     @staticmethod
-    def feature_boxplot(df, feature):
+    def feature_boxplot(
+        df,
+        feature
+    ):
 
         fig = px.box(
             df,
-            x="Class",
             y=feature,
-            title=f"{feature} vs Fraud"
+            title=f"{feature} Boxplot"
+        )
+
+        return fig
+
+    @staticmethod
+    def feature_scatter(
+        df,
+        x_feature,
+        y_feature
+    ):
+
+        fig = px.scatter(
+            df,
+            x=x_feature,
+            y=y_feature,
+            title=f"{x_feature} vs {y_feature}"
+        )
+
+        return fig
+
+    @staticmethod
+    def feature_lineplot(
+        df,
+        feature
+    ):
+
+        fig = px.line(
+            df,
+            y=feature,
+            title=f"{feature} Trend"
+        )
+
+        return fig
+
+    @staticmethod
+    def feature_violin(
+        df,
+        feature
+    ):
+
+        fig = px.violin(
+            df,
+            y=feature,
+            box=True,
+            points="outliers",
+            title=f"{feature} Violin Plot"
         )
 
         return fig
@@ -127,38 +107,106 @@ class EDAPlots:
     @staticmethod
     def pair_plot(df):
 
+        numeric_cols = df.select_dtypes(
+            include=["number"]
+        ).columns.tolist()
+
+        numeric_cols = numeric_cols[:4]
+
+        if len(numeric_cols) < 2:
+            return None
+
         sample_df = df.sample(
-            1000,
+            min(
+                500,
+                len(df)
+            ),
             random_state=42
         )
 
         fig = px.scatter_matrix(
             sample_df,
-            dimensions=[
-                "V1",
-                "V2",
-                "V3",
-                "V4"
-            ],
-            color="Class"
+            dimensions=numeric_cols
         )
 
         return fig
 
     @staticmethod
-    def fraud_amount_scatter(df):
+    def correlation_bar(df):
 
-        sample_df = df.sample(
-            5000,
-            random_state=42
+        corr_matrix = (
+            df.corr(
+                numeric_only=True
+            )
+            .abs()
         )
 
-        fig = px.scatter(
-            sample_df,
-            x="Time",
-            y="Amount",
-            color="Class",
-            title="Time vs Amount"
+        corr_values = (
+            corr_matrix.unstack()
+            .sort_values(
+                ascending=False
+            )
+        )
+
+        corr_values = corr_values[
+            corr_values < 1
+        ]
+
+        top_corr = corr_values.head(20)
+
+        fig = px.bar(
+            x=[
+                f"{i[0]} - {i[1]}"
+                for i in top_corr.index
+            ],
+            y=top_corr.values,
+            title="Top Correlations"
+        )
+
+        return fig
+
+    @staticmethod
+    def missing_values_plot(df):
+
+        missing = df.isnull().sum()
+
+        missing = missing[
+            missing > 0
+        ]
+
+        if len(missing) == 0:
+            return None
+
+        fig = px.bar(
+            x=missing.index,
+            y=missing.values,
+            title="Missing Values"
+        )
+
+        return fig
+
+    @staticmethod
+    def anomaly_distribution(df):
+
+        if "Anomaly" not in df.columns:
+            return None
+
+        counts = (
+            df["Anomaly"]
+            .value_counts()
+            .reset_index()
+        )
+
+        counts.columns = [
+            "Anomaly",
+            "Count"
+        ]
+
+        fig = px.pie(
+            counts,
+            names="Anomaly",
+            values="Count",
+            title="Anomaly Distribution"
         )
 
         return fig

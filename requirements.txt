@@ -1,9 +1,9 @@
+streamlit
 pandas
 numpy
+plotly
 matplotlib
 seaborn
-plotly
 scikit-learn
-streamlit
 joblib
 dill

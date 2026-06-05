@@ -8,7 +8,17 @@ sys.path.append(str(root_path))
 
 from src.visualization.eda_plots import EDAPlots
 
+st.set_page_config(
+    page_title="EDA Dashboard",
+    page_icon="📊",
+    layout="wide"
+)
+
 st.title("📊 Exploratory Data Analysis")
+
+# ---------------------------------------
+# Dataset Check
+# ---------------------------------------
 
 if "df" not in st.session_state:
 
@@ -20,98 +30,182 @@ if "df" not in st.session_state:
 
 df = st.session_state["df"]
 
+# ---------------------------------------
 # Dataset Overview
+# ---------------------------------------
 
 st.subheader("Dataset Overview")
 
 col1, col2, col3 = st.columns(3)
 
 with col1:
-    st.metric("Rows", df.shape[0])
+    st.metric(
+        "Rows",
+        df.shape[0]
+    )
 
 with col2:
-    st.metric("Columns", df.shape[1])
+    st.metric(
+        "Columns",
+        df.shape[1]
+    )
 
 with col3:
     st.metric(
-        "Fraud Cases",
-        int(df["Class"].sum())
+        "Missing Values",
+        int(df.isna().sum().sum())
     )
 
 st.dataframe(df.head())
 
-# Fraud Distribution
+# ---------------------------------------
+# Data Types
+# ---------------------------------------
 
-st.subheader("Fraud Distribution")
+st.subheader("Column Information")
 
-st.plotly_chart(
-    EDAPlots.fraud_distribution(df),
-    use_container_width=True
-)
+info_df = pd.DataFrame({
+    "Column": df.columns,
+    "Datatype": df.dtypes.astype(str),
+    "Missing Values": df.isna().sum().values
+})
 
-# Amount Distribution
+st.dataframe(info_df)
 
-st.subheader("Amount Distribution")
+# ---------------------------------------
+# Missing Values
+# ---------------------------------------
 
-st.plotly_chart(
-    EDAPlots.amount_distribution(df),
-    use_container_width=True
-)
+st.subheader("Missing Values")
 
-# Amount by Class
+missing_df = pd.DataFrame({
+    "Column": df.columns,
+    "Missing Count": df.isna().sum().values
+})
 
-st.subheader("Amount vs Class")
+missing_df = missing_df[
+    missing_df["Missing Count"] > 0
+]
 
-st.plotly_chart(
-    EDAPlots.amount_by_class(df),
-    use_container_width=True
-)
+if len(missing_df) > 0:
 
-# Time Distribution
+    st.dataframe(missing_df)
 
-st.subheader("Time Distribution")
+else:
 
-st.plotly_chart(
-    EDAPlots.time_distribution(df),
-    use_container_width=True
-)
+    st.success(
+        "No missing values found."
+    )
 
-# Heatmap
+# ---------------------------------------
+# Numerical Columns
+# ---------------------------------------
+
+numeric_cols = df.select_dtypes(
+    include=["number"]
+).columns.tolist()
+
+if len(numeric_cols) == 0:
+
+    st.error(
+        "No numerical columns found."
+    )
+
+    st.stop()
+
+# ---------------------------------------
+# Correlation Heatmap
+# ---------------------------------------
 
 st.subheader("Correlation Heatmap")
 
-heatmap = EDAPlots.correlation_heatmap(df)
+heatmap = EDAPlots.correlation_heatmap(
+    df[numeric_cols]
+)
 
 st.pyplot(heatmap)
 
-# Top Correlations
+# ---------------------------------------
+# Feature Distribution
+# ---------------------------------------
 
-st.subheader("Top Fraud Indicators")
+st.subheader("Feature Distribution")
 
-st.plotly_chart(
-    EDAPlots.top_correlated_features(df),
-    use_container_width=True
-)
-
-# Feature Explorer
-
-feature = st.selectbox(
-    "Select Feature",
-    [col for col in df.columns if col != "Class"]
+selected_feature = st.selectbox(
+    "Select Numerical Feature",
+    numeric_cols
 )
 
 st.plotly_chart(
     EDAPlots.feature_histogram(
         df,
-        feature
+        selected_feature
     ),
     use_container_width=True
 )
 
+# ---------------------------------------
+# Feature Boxplot
+# ---------------------------------------
+
+st.subheader("Feature Boxplot")
+
 st.plotly_chart(
     EDAPlots.feature_boxplot(
         df,
-        feature
+        selected_feature
     ),
     use_container_width=True
+)
+
+# ---------------------------------------
+# Summary Statistics
+# ---------------------------------------
+
+st.subheader("Summary Statistics")
+
+st.dataframe(
+    df[numeric_cols].describe()
+)
+
+# ---------------------------------------
+# Correlation Ranking
+# ---------------------------------------
+
+st.subheader(
+    "Top Correlated Features"
+)
+
+corr_matrix = (
+    df[numeric_cols]
+    .corr()
+    .abs()
+)
+
+corr_pairs = (
+    corr_matrix.unstack()
+    .sort_values(ascending=False)
+)
+
+corr_pairs = corr_pairs[
+    corr_pairs < 1
+]
+
+st.dataframe(
+    corr_pairs.head(20)
+)
+
+# ---------------------------------------
+# Dataset Download
+# ---------------------------------------
+
+csv = df.to_csv(
+    index=False
+)
+
+st.download_button(
+    "Download Dataset",
+    csv,
+    file_name="dataset.csv",
+    mime="text/csv"
 )
